@@ -12,10 +12,8 @@ find_package(OpenCV 4 REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
 sensor_msgs
-cv_bridge
 roscpp
 std_msgs
-image_transport
 )
 
 
@@ -46,7 +44,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/detectmarkers_ros.cpp)
+add_executable(${PROJECT_NAME}_node src/detectmarkers.cpp)
 
 
 ## Specify libraries to link a library or executable target against
