@@ -31,23 +31,6 @@ int main(int argc, char **argv)
     int wait_time = 10;
     cv::String videoInput = "0";
     cv::VideoCapture in_video;
-
-    /*Parametros copiados de inet*/
-    const cv::Mat  intrinsic_matrix = (cv::Mat_<float>(3, 3)
-                               << 803.9233,  0,         286.5234,
-                                  0,         807.6013,  245.9685,
-                                  0,         0,         1);
-
-    const cv::Mat  distCoeffs = (cv::Mat_<float>(5, 1) << 0.1431, -0.4943, 0, 0, 0);
-
-
-    const cv::Mat  arucodistCoeffs = (cv::Mat_<float>(1, 5) << 0, 0, 0, 0, 0);// La foto corregida se utiliza para la detección
-
-
-    /* The output parameters rvecs and tvecs are the rotation and translation vectors respectively, for each of the markers in markerCorners.*/
-    /* The markerCorners parameter is the vector of marker corners returned by the detectMarkers() function.*/
-    std::vector<cv::Vec3d> rvecs, tvecs; 
-    
     if (parser.has("v")) {
         videoInput = parser.get<cv::String>("v");
         if (videoInput.empty()) {
@@ -69,10 +52,10 @@ int main(int argc, char **argv)
     } else {
         //in_video.open("udpsrc port=5600 ! application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink fps-update-interval=1000 sync=false ! appsink drop=1");
         in_video.open("udpsrc port=5600 ! application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264 ! rtph264depay ! avdec_h264 ! videoconvert ! appsink drop=1");
-        in_video.set(cv::CAP_PROP_FPS, 30);
-        in_video.set(cv::CAP_PROP_FRAME_WIDTH, 640);
-        in_video.set(cv::CAP_PROP_FRAME_HEIGHT, 360);
-        in_video.set(cv::CAP_PROP_SATURATION, 0);
+        //in_video.set(cv::CAP_PROP_FPS, 30);
+        //in_video.set(cv::CAP_PROP_FRAME_WIDTH, 640);
+        //in_video.set(cv::CAP_PROP_FRAME_HEIGHT, 360);
+        //in_video.set(cv::CAP_PROP_SATURATION, 0);
         printf("OPENED");
     }
 
@@ -97,19 +80,11 @@ int main(int argc, char **argv)
         std::vector<int> ids;
         std::vector<std::vector<cv::Point2f>> corners;
         cv::aruco::detectMarkers(image, dictionary, corners, ids);
-        /*Estimate pose*/
-        cv::aruco::estimatePoseSingleMarkers(corners, 0.05, intrinsic_matrix, distCoeffs, rvecs, tvecs);
         
         // If at least one marker detected
         if (ids.size() > 0)
             cv::aruco::drawDetectedMarkers(image_copy, corners, ids);
 
-        for (int i = 0; i < rvecs.size(); ++i) {
-                auto rvec = rvecs[i];
-                auto tvec = tvecs[i];
-                cv::aruco::drawAxis(image_copy, intrinsic_matrix, distCoeffs, rvec, tvec, 0.1);
-            }
-            
         imshow("Detected markers", image_copy);
         char key = (char)cv::waitKey(wait_time);
         if (key == 27)
