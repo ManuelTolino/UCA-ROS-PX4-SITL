@@ -1,3 +1,17 @@
+/* 
+
+File: detectmarkers.cpp 
+
+Author: Manuel Tolino Contreras
+
+Decription: This file contains the code intended to generate a node which should
+capture a gstreamer video input and detect ArUco markers. The detected
+markers should be represented in real time in a windows superposed with
+the video feed.
+
+*/
+
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp>
 #include <opencv2/videoio.hpp>
