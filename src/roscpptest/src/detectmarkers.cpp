@@ -83,10 +83,10 @@ int main(int argc, char **argv)
     } else {
         //in_video.open("udpsrc port=5600 ! application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink fps-update-interval=1000 sync=false ! appsink drop=1");
         in_video.open("udpsrc port=5600 ! application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264 ! rtph264depay ! avdec_h264 ! videoconvert ! appsink drop=1");
-        in_video.set(cv::CAP_PROP_FPS, 30);
-        in_video.set(cv::CAP_PROP_FRAME_WIDTH, 640);
-        in_video.set(cv::CAP_PROP_FRAME_HEIGHT, 360);
-        in_video.set(cv::CAP_PROP_SATURATION, 0);
+        //in_video.set(cv::CAP_PROP_FPS, 30);
+        //in_video.set(cv::CAP_PROP_FRAME_WIDTH, 640);
+        //in_video.set(cv::CAP_PROP_FRAME_HEIGHT, 360);
+        //in_video.set(cv::CAP_PROP_SATURATION, 0);
         printf("OPENED");
     }
 
