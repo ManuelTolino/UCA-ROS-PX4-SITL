@@ -46,17 +46,25 @@ int main(int argc, char **argv)
     cv::String videoInput = "0";
     cv::VideoCapture in_video;
 
-    /*Parametros copiados de inet*/
+    /*Parametros copiados de inet
     const cv::Mat  intrinsic_matrix = (cv::Mat_<float>(3, 3)
                                << 803.9233,  0,         286.5234,
                                   0,         807.6013,  245.9685,
                                   0,         0,         1);
-
-    const cv::Mat  distCoeffs = (cv::Mat_<float>(5, 1) << 0.1431, -0.4943, 0, 0, 0);
+                                  */
+     const cv::Mat  intrinsic_matrix = (cv::Mat_<float>(3, 3)
+                               << 530.8269276712998,  0.0,       320.5,
+                                  0.0,       530.8269276712998,  240.5,
+                                  0.0,       0.0,                  1.0);
+                                                                  
+    /* NO distorsion for the virtual camera*/
+    const cv::Mat  distCoeffs = (cv::Mat_<float>(5, 1) << 0.0, 0.0, 0.0, 0.0, 0.0);
+    /* const cv::Mat  distCoeffs = (cv::Mat_<float>(5, 1) << 0.1431, -0.4943, 0, 0, 0); */
 
 
     const cv::Mat  arucodistCoeffs = (cv::Mat_<float>(1, 5) << 0, 0, 0, 0, 0);// La foto corregida se utiliza para la detección
-
+    float fov_horiz = 1.0 ;
+    float fov_vert = 1.0 ;
 
     /* The output parameters rvecs and tvecs are the rotation and translation vectors respectively, for each of the markers in markerCorners.*/
     /* The markerCorners parameter is the vector of marker corners returned by the detectMarkers() function.*/
@@ -81,7 +89,6 @@ int main(int argc, char **argv)
             in_video.set(cv::CAP_PROP_SATURATION, 0);
         }
     } else {
-        //in_video.open("udpsrc port=5600 ! application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink fps-update-interval=1000 sync=false ! appsink drop=1");
         in_video.open("udpsrc port=5600 ! application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264 ! rtph264depay ! avdec_h264 ! videoconvert ! appsink drop=1");
         //in_video.set(cv::CAP_PROP_FPS, 30);
         //in_video.set(cv::CAP_PROP_FRAME_WIDTH, 640);
@@ -111,19 +118,53 @@ int main(int argc, char **argv)
         std::vector<int> ids;
         std::vector<std::vector<cv::Point2f>> corners;
         cv::aruco::detectMarkers(image, dictionary, corners, ids);
-        /*Estimate pose*/
-        cv::aruco::estimatePoseSingleMarkers(corners, 0.05, intrinsic_matrix, distCoeffs, rvecs, tvecs);
+
+        int res_horizontal = image_copy.size().width;
+        int res_vertical = image_copy.size().height;
+
+        /*  DEBUGGING PRINT of camera input total pixels */
+        // printf("Width: %i  Height: %i\n",horizontal_res,vertical_res);   
+        
         
         // If at least one marker detected
         if (ids.size() > 0)
+            {
+            /*Estimate pose function*/
+            cv::aruco::estimatePoseSingleMarkers(corners, 0.05, intrinsic_matrix, distCoeffs, rvecs, tvecs);
             cv::aruco::drawDetectedMarkers(image_copy, corners, ids);
 
-        for (int i = 0; i < rvecs.size(); ++i) {
+            for (int i = 0; i < rvecs.size(); ++i) 
+            {   /* Draw axis for each marker detected*/
                 auto rvec = rvecs[i];
                 auto tvec = tvecs[i];
                 cv::aruco::drawAxis(image_copy, intrinsic_matrix, distCoeffs, rvec, tvec, 0.1);
-            }
-            
+                }
+            int marker_index = 0;    
+            auto selected_marker = corners[marker_index];
+            auto corner1 = selected_marker[0]; // Top Left, small ref. red square
+            auto corner2 = selected_marker[1]; // Clockwise or top right
+            auto corner3 = selected_marker[2]; // Clockwise or bottom right
+            auto corner4 = selected_marker[3]; // Clockwise or bottom left
+
+            double x_sum = corner1.x + corner2.x + corner3.x + corner4.x ;
+            double y_sum = corner1.y + corner2.y + corner3.y + corner4.y ;
+
+            double x_avg = x_sum / 4;
+            double y_avg = y_sum / 4; 
+
+            double x_dev = (x_avg - res_horizontal * .5) * fov_horiz / res_horizontal;
+            double y_dev = (y_avg - res_vertical * .5) * fov_vert / res_vertical;
+
+            /*  DEBUGGING PRINT of Deviation    */
+
+            printf("Xdev=%f Ydev=%f\n", x_dev, y_dev);
+
+            /*  DEBUGGING PRINT of 
+            printf("X1=%i X2=%i X3=%i X4=%i\nY1=%i Y2=%i Y3=%i Y4=%i\n", int(corner1.x), int(corner2.x), int(corner3.x), int(corner4.x),
+                                                int(corner1.y), int(corner2.y), int(corner3.y), int(corner4.y));
+            */
+            };
+           
         imshow("Detected markers", image_copy);
         char key = (char)cv::waitKey(wait_time);
         if (key == 27)
